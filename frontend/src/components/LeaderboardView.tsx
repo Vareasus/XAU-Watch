@@ -16,28 +16,32 @@ const predefinedUsers: UserHolding[] = [
     {
         name: "Selo",
         holdings: [
-            { type: 'ata', count: 15 },
-            { type: 'gram', count: 2 },
-            { type: 'quarter', count: 2 },
-            { type: 'half', count: 2 },
-            { type: 'gremse', count: 1 }
+            { type: 'ata_altin', count: 15 },
+            { type: 'gram_altin', count: 2 },
+            { type: 'ceyrek_altin', count: 2 },
+            { type: 'yarim_altin', count: 2 },
+            { type: 'gremse_altin', count: 1 }
         ]
     },
     {
         name: "Anıl",
         holdings: [
-            { type: 'ata', count: 15 },
-            { type: 'quarter', count: 9 },
-            { type: 'gram', count: 2 }
+            { type: 'ata_altin', count: 15 },
+            { type: 'ceyrek_altin', count: 9 },
+            { type: 'gram_altin', count: 2 }
         ]
     },
     {
         name: "Ayça",
         holdings: [
-            { type: 'gram', count: 3 }
+            { type: 'gram_altin', count: 3 }
         ]
     }
 ];
+
+// ... (skip down to getHoldingName)
+
+
 
 export default function LeaderboardView() {
     const [users, setUsers] = useState<UserHolding[]>([]);
@@ -60,11 +64,11 @@ export default function LeaderboardView() {
                 } else {
                     // Fallback prices if API fails or empty
                     prices = {
-                        gram: 7350.00,
-                        quarter: 12100.00,
-                        half: 24200.00,
-                        ata: 50100.00,
-                        gremse: 120500.00
+                        gram_altin: 7350.00,
+                        ceyrek_altin: 12100.00,
+                        yarim_altin: 24200.00,
+                        ata_altin: 50100.00,
+                        gremse_altin: 120500.00
                     };
                 }
 
@@ -107,12 +111,22 @@ export default function LeaderboardView() {
 
     const getHoldingName = (key: string) => {
         const names: Record<string, string> = {
+            ata_altin: 'Ata Altın',
+            gremse_altin: 'Gremse Altın',
+            yarim_altin: 'Yarım Altın',
+            ceyrek_altin: 'Çeyrek Altın',
+            gram_altin: 'Gram Altın',
+            // Fallback for old keys if needed temporarily
             ata: 'Ata Altın',
             gremse: 'Gremse Altın',
             half: 'Yarım Altın',
             quarter: 'Çeyrek Altın',
             gram: 'Gram Altın'
         };
+        // Format others: "besli_altin" -> "Besli Altin"
+        if (!names[key]) {
+            return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
         return names[key] || key;
     };
 
