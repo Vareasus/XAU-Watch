@@ -24,13 +24,12 @@ interface GoldChartProps {
     period: '7d' | '30d' | '90d' | '1y';
     onPeriodChange: (period: '7d' | '30d' | '90d' | '1y') => void;
     currentPrice: number;
+    onBuy: () => void;
+    onSell: () => void;
 }
 
-export default function GoldChart({ data, period, onPeriodChange, currentPrice }: GoldChartProps) {
+export default function GoldChart({ data, period, onPeriodChange, currentPrice, onBuy, onSell }: GoldChartProps) {
     const [hoveredData, setHoveredData] = useState<any>(null);
-
-    const handleBuy = () => alert("Buy order executed (Simulated)");
-    const handleSell = () => alert("Sell order executed (Simulated)");
 
     return (
         <div className="glass-panel m-4 flex-1 flex flex-col h-full relative overflow-hidden shadow-neon border-white/10 rounded-3xl">
@@ -73,13 +72,13 @@ export default function GoldChart({ data, period, onPeriodChange, currentPrice }
 
                     <div className="flex gap-3">
                         <button
-                            onClick={handleBuy}
+                            onClick={onBuy}
                             className="bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-white font-bold py-3 px-8 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all transform hover:-translate-y-1 active:scale-95 flex items-center gap-2 border border-emerald-300/30 backdrop-blur-md cursor-pointer"
                         >
                             <TrendingUp size={18} /> BUY
                         </button>
                         <button
-                            onClick={handleSell}
+                            onClick={onSell}
                             className="bg-gradient-to-br from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-bold py-3 px-8 rounded-2xl shadow-[0_0_20px_rgba(244,63,94,0.4)] transition-all transform hover:-translate-y-1 active:scale-95 flex items-center gap-2 border border-rose-300/30 backdrop-blur-md cursor-pointer"
                         >
                             <TrendingDown size={18} /> SELL

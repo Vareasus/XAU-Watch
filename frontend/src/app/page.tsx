@@ -7,6 +7,7 @@ import Sidebar, { ViewType } from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import MarketList from '@/components/MarketList';
 import GoldChart from '@/components/GoldChart';
+import GoldDetailModal from '@/components/GoldDetailModal';
 import PortfolioView from '@/components/PortfolioView';
 import PlaceholderView from '@/components/PlaceholderView';
 import SearchView from '@/components/SearchView';
@@ -103,6 +104,23 @@ export default function Home() {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
 
+  // State for dashboard modal (Buy/Sell from Main Chart)
+  const [dashboardModalGold, setDashboardModalGold] = useState<any>(null);
+
+  const handleChartTransaction = (type: 'buy' | 'sell') => {
+    // Construct a gold object for the modal based on current chart data
+    const goldObj = {
+      name: "Gram Altın (Spot)", // Defaulting to Gram for the main chart interaction
+      price: currentPrice,
+      buying: currentPrice * 0.98, // Estimated buying price
+      selling: currentPrice,
+      change: 0.84, // This could be dynamic if we had it
+      weight: "1.00g",
+      purity: "0.995",
+    };
+    setDashboardModalGold(goldObj);
+  };
+
   // Check for saved session
   useEffect(() => {
     const savedRole = localStorage.getItem('userRole');
@@ -153,9 +171,19 @@ export default function Home() {
                 period={period}
                 onPeriodChange={setPeriod}
                 currentPrice={currentPrice}
+                onBuy={() => handleChartTransaction('buy')}
+                onSell={() => handleChartTransaction('sell')}
               />
             </div>
             <MarketList />
+            {dashboardModalGold && (
+              <div style={{ position: 'fixed', inset: 0, zIndex: 100 }}>
+                <GoldDetailModal
+                  gold={dashboardModalGold}
+                  onClose={() => setDashboardModalGold(null)}
+                />
+              </div>
+            )}
           </main>
         );
       case 'search':
