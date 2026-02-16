@@ -38,9 +38,66 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
 
     const isPositive = gold.change >= 0;
 
+    const [notification, setNotification] = useState<string | null>(null);
+
+    const handleTransaction = (type: 'buy' | 'sell') => {
+        if (amount <= 0) return;
+
+        // Get existing portfolio
+        const savedPortfolio = localStorage.getItem('userPortfolio');
+        let portfolio = savedPortfolio ? JSON.parse(savedPortfolio) : [];
+
+        // Determine symbol key (this requires gold object to have a key, or we generate one)
+        // Since we don't have the explicit key passed in props, we can try to derive it or use name
+        // Ideally the parent should pass the key, but name is unique enough for now.
+        const symbol = gold.name;
+
+        if (type === 'sell') {
+            // Check formatted ownership
+            const currentOwned = portfolio
+                .filter((p: any) => p.symbol === symbol)
+                .reduce((acc: number, curr: any) => curr.type === 'buy' ? acc + curr.amount : acc - curr.amount, 0);
+
+            if (currentOwned < amount) {
+                setNotification("Insufficient balance to sell!");
+                setTimeout(() => setNotification(null), 3000);
+                return;
+            }
+        }
+
+        const transaction = {
+            id: Date.now(),
+            symbol: symbol,
+            name: gold.name,
+            amount: amount,
+            price: type === 'buy' ? gold.price : (gold.buying || gold.price * 0.95),
+            date: new Date().toISOString(),
+            type: type
+        };
+
+        const newPortfolio = [...portfolio, transaction];
+        localStorage.setItem('userPortfolio', JSON.stringify(newPortfolio));
+
+        setNotification(`Successfully ${type === 'buy' ? 'bought' : 'sold'} ${amount} ${gold.name}!`);
+        setTimeout(() => {
+            setNotification(null);
+            onClose(); // Close modal on success
+        }, 1500);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center pt-8 p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-[#0f172a] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+                {/* Notification Toast */}
+                {notification && (
+                    <div className={clsx(
+                        "absolute top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg z-50 font-bold transition-all animate-in slide-in-from-top-5",
+                        notification.includes("Insufficient") ? "bg-red-500 text-white" : "bg-emerald-500 text-white"
+                    )}>
+                        {notification}
+                    </div>
+                )}
 
                 {/* Header */}
                 <div className="p-6 pt-8 border-b border-white/5 flex justify-between items-center bg-white/5">
@@ -125,40 +182,56 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
                         </div>
                     </div>
 
-                    {/* Calculator Section */}
-                    <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl p-6 border border-white/10">
-                        <h3 className="text-white font-bold flex items-center gap-2 mb-4">
-                            <Calculator size={18} className="text-indigo-400" /> Calculate Value
-                        </h3>
+                    {/* Transaction Section */}
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl p-6 border border-white/10 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-white font-bold flex items-center gap-2">
+                                <Calculator size={18} className="text-indigo-400" /> Trade Simulation
+                            </h3>
+                            <div className="text-xs text-white/40 uppercase tracking-widest font-bold">Virtual Portfolio</div>
+                        </div>
 
-                        <div className="flex items-center gap-4 mb-6">
-                            <label className="text-white/70 text-sm">Quantity:</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={amount}
-                                onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
-                                className="bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-white font-mono w-32 focus:outline-none focus:border-yellow-500/50"
-                            />
-                            <span className="text-white/50 text-sm">pieces</span>
+                        <div className="flex items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/5">
+                            <div className="flex-1">
+                                <label className="text-white/50 text-xs uppercase font-bold block mb-2">Quantity</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={amount}
+                                        onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
+                                        className="bg-transparent text-2xl font-mono text-white w-full outline-none placeholder-white/20"
+                                        placeholder="0"
+                                    />
+                                    <span className="text-white/30 font-bold">Pcs</span>
+                                </div>
+                            </div>
+                            <div className="h-10 w-px bg-white/10"></div>
+                            <div className="flex-1 text-right">
+                                <label className="text-white/50 text-xs uppercase font-bold block mb-1">Estimated Total</label>
+                                <div className="text-xl font-bold text-white tabular-nums">
+                                    ₺{(amount * gold.price).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-black/20 p-4 rounded-xl">
-                                <div className="text-white/50 text-xs uppercase mb-1">Total Cost to Buy</div>
-                                <div className="text-xl font-bold text-emerald-400 tabular-nums">
-                                    ₺{totalBuy.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                                </div>
-                            </div>
-                            <div className="bg-black/20 p-4 rounded-xl">
-                                <div className="text-white/50 text-xs uppercase mb-1">Total Value to Sell</div>
-                                <div className="text-xl font-bold text-rose-400 tabular-nums">
-                                    ₺{totalSell.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                                </div>
-                            </div>
+                            <button
+                                onClick={() => handleTransaction('buy')}
+                                disabled={amount <= 0}
+                                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                            >
+                                Buy (Al)
+                            </button>
+                            <button
+                                onClick={() => handleTransaction('sell')}
+                                disabled={amount <= 0}
+                                className="bg-rose-500 hover:bg-rose-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-rose-500/20"
+                            >
+                                Sell (Sat)
+                            </button>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

@@ -7,6 +7,7 @@ import Sidebar, { ViewType } from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import MarketList from '@/components/MarketList';
 import GoldChart from '@/components/GoldChart';
+import PortfolioView from '@/components/PortfolioView';
 import PlaceholderView from '@/components/PlaceholderView';
 import SearchView from '@/components/SearchView';
 import SupportView from '@/components/SupportView';
@@ -171,6 +172,8 @@ export default function Home() {
         );
       case 'admin':
         return userRole === 'admin' ? <AdminView /> : <div className="p-10 text-white/50">Access Denied</div>;
+      case 'trade':
+        return <PortfolioView />;
       default:
         return (
           <div className="flex-1 flex min-h-0 animate-in fade-in slide-in-from-bottom-5 duration-500">
