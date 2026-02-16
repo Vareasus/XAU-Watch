@@ -15,6 +15,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const validate = () => {
         // Username: Alphanumeric, min 6 chars
@@ -74,6 +75,9 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                     // Clear fields or keep them? Usually keep them for UX or clear for security.
                     // keeping them is easier for user.
                 } else { // Logged in
+                    if (rememberMe) {
+                        localStorage.setItem('userRole', data.role);
+                    }
                     onLogin(data.role);
                 }
             } else {
@@ -140,6 +144,29 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                         </div>
                         {isRegister && <p className="text-[10px] text-white/30 ml-1">Min 7 chars, 1 Upper, 1 Lower, 1 Number, 1 Symbol.</p>}
                     </div>
+
+                    {!isRegister && (
+                        <div className="flex items-center justify-between px-1">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                    />
+                                    <div className="w-5 h-5 border-2 border-white/20 rounded-md peer-checked:bg-yellow-500 peer-checked:border-yellow-500 transition-all"></div>
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors select-none">Remember Me</span>
+                            </label>
+                            <a href="#" className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors">Forgot Password?</a>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center font-medium animate-in fade-in slide-in-from-top-2">

@@ -32,18 +32,45 @@ async def get_turkish_prices():
 
         rows = table.find_all("tr")
         
-        target_map = {
-            "Has Altın": "gram",
-            "Gram Altın": "gram",
-            "Çeyrek Altın": "quarter", 
-            "Yarım Altın": "half",
-            "Tam Altın": "full", 
-            "Cumhuriyet Altını": "republic",
-            "Ata Altın": "ata",
-            "Gremse Altın": "gremse",
-            "22 Ayar Bilezik": "bracelet_22",
-            "14 Ayar Altın": "gold_14"
-        }
+        # Helper function to create safe keys from Turkish text
+        def slugify_turkish(text):
+            """Convert Turkish text to safe key: 'Beşli Altın' -> 'besli_altin'"""
+            text = text.lower()
+            replacements = {
+                'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+                'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+            }
+            for tr, en in replacements.items():
+                text = text.replace(tr, en)
+            # Remove special chars, keep alphanumeric and spaces
+            text = re.sub(r'[^a-z0-9\s]', '', text)
+            # Replace spaces with underscores
+            text = re.sub(r'\s+', '_', text.strip())
+            return text
+        
+        # Robust cleaning logic
+        def clean_price(t):
+            try:
+                # Case 1: English format (e.g. 47645.00)
+                if re.search(r'\.\d{2}$', t): 
+                    clean = t.replace(",", "") 
+                    match = re.search(r'\d+(\.\d+)?', clean)
+                    if match: return float(match.group(0))
+                
+                # Case 2: Turkish Formal (e.g. 49.117 or 49.117,00)
+                match = re.search(r'(\d{1,3}(?:\.\d{3})+(?:,\d+)?)', t)
+                if match:
+                    val = match.group(1).replace(".", "").replace(",", ".")
+                    return float(val)
+                    
+                # Case 3: Raw digits
+                match = re.search(r'(\d+(?:,\d+)?)', t)
+                if match:
+                    val = match.group(1).replace(".", "").replace(",", ".")
+                    return float(val)
+                return 0.0
+            except:
+                return 0.0
 
         for row in rows:
             cols = row.find_all("td")
@@ -53,53 +80,31 @@ async def get_turkish_prices():
             # col[0] name, col[1] buy, col[2] sell
             name_text = cols[0].get_text(strip=True)
             
-            matched_key = None
-            matched_name = None
+            # Skip empty or header rows
+            if not name_text or name_text.lower() in ['altın', 'döviz', 'name', 'isim']:
+                continue
             
-            for target_name, key in target_map.items():
-                if target_name in name_text:
-                    if "Eski" in name_text and "Yeni" not in name_text:
-                        continue 
-                    matched_key = key
-                    matched_name = target_name
-                    break
+            # Skip "Eski" (old) versions if "Yeni" (new) exists
+            if "Eski" in name_text and "Yeni" not in name_text:
+                continue
             
-            if matched_key:
-                raw_buy = cols[1].get_text(strip=True)
-                raw_sell = cols[2].get_text(strip=True)
-                
-                # Robust cleaning logic
-                def clean_price(t):
-                    try:
-                        # Case 1: English format (e.g. 47645.00)
-                        if re.search(r'\.\d{2}$', t): 
-                            clean = t.replace(",", "") 
-                            match = re.search(r'\d+(\.\d+)?', clean)
-                            if match: return float(match.group(0))
-                        
-                        # Case 2: Turkish Formal (e.g. 49.117 or 49.117,00)
-                        match = re.search(r'(\d{1,3}(?:\.\d{3})+(?:,\d+)?)', t)
-                        if match:
-                            val = match.group(1).replace(".", "").replace(",", ".")
-                            return float(val)
-                            
-                        # Case 3: Raw digits
-                        match = re.search(r'(\d+(?:,\d+)?)', t)
-                        if match:
-                            val = match.group(1).replace(".", "").replace(",", ".")
-                            return float(val)
-                        return 0.0
-                    except:
-                        return 0.0
-
-                buy_price = clean_price(raw_buy)
-                sell_price = clean_price(raw_sell)
-                
-                prices[matched_key] = {
-                    "name": matched_name,
+            # Generate key from name
+            key = slugify_turkish(name_text)
+            
+            # Extract prices
+            raw_buy = cols[1].get_text(strip=True)
+            raw_sell = cols[2].get_text(strip=True)
+            
+            buy_price = clean_price(raw_buy)
+            sell_price = clean_price(raw_sell)
+            
+            # Only add if prices are valid
+            if buy_price > 0 or sell_price > 0:
+                prices[key] = {
+                    "name": name_text,
                     "buying": buy_price,
                     "selling": sell_price,
-                    "change": 0.5 
+                    "change": 0.5  # Placeholder, can calculate if historical data available
                 }
 
         # Update cache

@@ -102,6 +102,14 @@ export default function Home() {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
 
+  // Check for saved session
+  useEffect(() => {
+    const savedRole = localStorage.getItem('userRole');
+    if (savedRole && (savedRole === 'admin' || savedRole === 'user')) {
+      setUserRole(savedRole as 'admin' | 'user');
+    }
+  }, []);
+
   // Effect to update data when period changes
   useEffect(() => {
     const newData = generateMockData(period);
@@ -185,7 +193,10 @@ export default function Home() {
       <Sidebar activeView={activeView} onViewChange={setActiveView} userRole={userRole} />
 
       <div className="flex-1 flex flex-col min-w-0 px-4 md:pl-0 md:pr-4 pb-4 pt-4 md:pt-0">
-        <TopBar userRole={userRole} onLogout={() => setUserRole(null)} />
+        <TopBar userRole={userRole} onLogout={() => {
+          localStorage.removeItem('userRole');
+          setUserRole(null);
+        }} />
         {renderView()}
       </div>
     </div>
