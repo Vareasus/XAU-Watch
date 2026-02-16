@@ -95,7 +95,7 @@ const viewTitles: Record<ViewType, string> = {
 };
 
 export default function Home() {
-  const [currentPrice, setCurrentPrice] = useState<number>(5043.11);
+  const [currentPrice, setCurrentPrice] = useState<number>(2035.50);
   const [historicalData, setHistoricalData] = useState<any[]>([]);
   // Use 'any' or string for period to allow flexibility with string inputs from UI
   const [period, setPeriod] = useState<any>('7d');
@@ -106,6 +106,10 @@ export default function Home() {
   useEffect(() => {
     const newData = generateMockData(period);
     setHistoricalData(newData);
+    // Update current price to match the latest data point
+    if (newData.length > 0) {
+      setCurrentPrice(newData[newData.length - 1].price);
+    }
   }, [period]);
 
   useEffect(() => {
