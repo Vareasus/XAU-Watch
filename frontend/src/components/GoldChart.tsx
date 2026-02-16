@@ -44,7 +44,7 @@ export default function GoldChart({ data, period, onPeriodChange, currentPrice }
                         </h2>
                     </div>
                     <div className="flex items-baseline gap-4 mt-2">
-                        <span className="text-5xl font-black bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-600 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] transition-all duration-300">
+                        <span className="text-3xl md:text-5xl font-black bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-600 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] transition-all duration-300">
                             {hoveredData ? hoveredData.price.toFixed(2) : currentPrice?.toFixed(2) || "Loading..."}
                         </span>
                         <span className="text-lg font-bold text-emerald-400 flex items-center bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 backdrop-blur-sm shadow-[0_0_10px_rgba(16,185,129,0.2)]">

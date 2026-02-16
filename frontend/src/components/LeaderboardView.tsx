@@ -134,51 +134,53 @@ export default function LeaderboardView() {
             {loading ? (
                 <div className="flex-1 flex items-center justify-center text-white/50">Calculating wealth...</div>
             ) : (
-                <div className="space-y-4">
-                    {users.map((user, index) => (
-                        <div
-                            key={user.name}
-                            className={clsx(
-                                "relative flex items-center justify-between p-6 rounded-3xl border transition-all hover:scale-[1.01] group overflow-hidden",
-                                index === 0 ? "bg-gradient-to-r from-yellow-500/10 to-orange-500/20 border-yellow-500/30" :
-                                    index === 1 ? "bg-white/5 border-white/10" :
-                                        index === 2 ? "bg-white/5 border-white/10" : "bg-white/5 border-white/5"
-                            )}
-                        >
-                            {/* Background Glow for 1st place */}
-                            {index === 0 && <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-[100px] -z-10 animate-pulse"></div>}
+                <div className="overflow-x-auto pb-4">
+                    <div className="space-y-4 min-w-[600px]">
+                        {users.map((user, index) => (
+                            <div
+                                key={user.name}
+                                className={clsx(
+                                    "relative flex items-center justify-between p-6 rounded-3xl border transition-all hover:scale-[1.01] group overflow-hidden",
+                                    index === 0 ? "bg-gradient-to-r from-yellow-500/10 to-orange-500/20 border-yellow-500/30" :
+                                        index === 1 ? "bg-white/5 border-white/10" :
+                                            index === 2 ? "bg-white/5 border-white/10" : "bg-white/5 border-white/5"
+                                )}
+                            >
+                                {/* Background Glow for 1st place */}
+                                {index === 0 && <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-[100px] -z-10 animate-pulse"></div>}
 
-                            <div className="flex items-center gap-6">
-                                <div className={clsx("text-4xl font-black w-12 text-center flex justify-center", getMedalColor(index))}>
-                                    {index === 0 ? <Crown size={42} /> : `#${index + 1}`}
+                                <div className="flex items-center gap-6">
+                                    <div className={clsx("text-4xl font-black w-12 text-center flex justify-center", getMedalColor(index))}>
+                                        {index === 0 ? <Crown size={42} /> : `#${index + 1}`}
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                                            {user.name}
+                                            {index === 0 && <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Leader</span>}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {user.holdings.map((h, i) => (
+                                                <span key={i} className="text-xs font-mono text-white/60 bg-black/30 px-2 py-1 rounded-lg border border-white/5 flex items-center gap-1">
+                                                    <span className="text-yellow-500 font-bold">{h.count}x</span> {getHoldingName(h.type)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                                        {user.name}
-                                        {index === 0 && <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Leader</span>}
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {user.holdings.map((h, i) => (
-                                            <span key={i} className="text-xs font-mono text-white/60 bg-black/30 px-2 py-1 rounded-lg border border-white/5 flex items-center gap-1">
-                                                <span className="text-yellow-500 font-bold">{h.count}x</span> {getHoldingName(h.type)}
-                                            </span>
-                                        ))}
+                                <div className="text-right pl-4">
+                                    <div className="text-sm text-white/40 uppercase font-bold tracking-wider mb-1">Total Wealth</div>
+                                    <div className={clsx(
+                                        "text-3xl font-black tracking-tighter tabular-nums whitespace-nowrap",
+                                        index === 0 ? "text-yellow-400" : "text-white"
+                                    )}>
+                                        {formatCurrency(user.totalValue || 0)}
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="text-right">
-                                <div className="text-sm text-white/40 uppercase font-bold tracking-wider mb-1">Total Wealth</div>
-                                <div className={clsx(
-                                    "text-3xl font-black tracking-tighter tabular-nums",
-                                    index === 0 ? "text-yellow-400" : "text-white"
-                                )}>
-                                    {formatCurrency(user.totalValue || 0)}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

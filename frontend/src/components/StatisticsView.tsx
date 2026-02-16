@@ -90,7 +90,7 @@ export default function StatisticsView() {
     };
 
     return (
-        <div className="flex-1 glass-panel m-4 flex flex-col p-6 shadow-neon border-white/10 rounded-3xl overflow-y-auto animate-in fade-in slide-in-from-bottom-5 duration-500">
+        <div className="flex-1 glass-panel m-4 flex flex-col p-6 shadow-neon border-white/10 rounded-3xl overflow-y-auto">
             <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3 sticky top-0 bg-[#0f172a]/90 backdrop-blur-xl z-20 py-2">
                 <Coins className="text-yellow-400" /> Turkish Market Statistics (TRY)
             </h2>

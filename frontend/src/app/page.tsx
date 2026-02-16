@@ -152,7 +152,11 @@ export default function Home() {
       case 'support':
         return <SupportView />;
       case 'statistics':
-        return <StatisticsView />;
+        return (
+          <div className="flex-1 pb-24 md:pb-0 overflow-hidden flex flex-col">
+            <StatisticsView />
+          </div>
+        );
       case 'admin':
         return userRole === 'admin' ? <AdminView /> : <div className="p-10 text-white/50">Access Denied</div>;
       default:
