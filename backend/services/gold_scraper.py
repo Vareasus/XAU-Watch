@@ -78,7 +78,54 @@ async def get_turkish_prices():
                 continue
             
             # col[0] name, col[1] buy, col[2] sell
-            name_text = cols[0].get_text(strip=True)
+            # Use separator to avoid "GAGram" concatenation issues
+            full_text = cols[0].get_text(separator=' ', strip=True)
+            
+            # Helper to clean the name
+            def clean_name_text(text):
+                # 1. Remove time patterns (e.g. 16:31:16)
+                text = re.sub(r'\d{2}:\d{2}:\d{2}', '', text)
+                
+                # 2. Known trash prefixes/codes cleaning based on screenshot analysis
+                # "GA Gram" -> "Gram", "XHGLD Has" -> "Has", "T Tam" -> "Tam", "GR Gremse" -> "Gremse"
+                # "ATA Ata" -> "Ata", "C Ceyrek" -> "Ceyrek" (or Ç)
+                
+                parts = text.split()
+                cleaned_parts = []
+                
+                for part in parts:
+                    # Skip common codes if they appear alone
+                    if part in ['GA', 'XHGLD', 'GR', 'ATA', 'C', 'T', 'Y', 'ZZ']: 
+                        continue
+                    # Skip if part is suspiciously like the start of the next word (e.g. "C" before "Çeyrek" or "T" before "Tam")
+                    # but splitting by space usually handles "GA Gram" well. 
+                    
+                    cleaned_parts.append(part)
+                
+                # Join back
+                name = " ".join(cleaned_parts)
+                
+                # Double check for concatenated artifacts if separator didn't work (fallback)
+                # "CCeyrek" -> "Çeyrek"
+                # This often handles "CodeName" if separator wasn't inserted by BS4 (e.g. text nodes)
+                # But we used separator=' ' so hopefully it's "Code Name".
+                
+                # Fix specific known bad starts if they persist
+                if name.startswith("GA Gram"): name = name.replace("GA ", "")
+                if name.startswith("XHGLD"): name = name.replace("XHGLD", "").strip()
+                if name.startswith("ATA Ata"): name = name.replace("ATA ", "")
+                
+                # Remove any leftover short prefix if it matches the first letter of name? 
+                # e.g. "C Çeyrek"
+                if len(parts) > 1 and len(parts[0]) <= 2 and parts[1].startswith(parts[0]):
+                     # Example: "C Çeyrek" (C is not prefix of Ç exactly in unicode but visually close)
+                     # Or "T Tam"
+                     pass 
+
+                # Final cleanup
+                return name.strip()
+
+            name_text = clean_name_text(full_text)
             
             # Skip empty or header rows
             if not name_text or name_text.lower() in ['altın', 'döviz', 'name', 'isim']:
@@ -104,7 +151,7 @@ async def get_turkish_prices():
                     "name": name_text,
                     "buying": buy_price,
                     "selling": sell_price,
-                    "change": 0.5  # Placeholder, can calculate if historical data available
+                    "change": 0.5  # Placeholder
                 }
 
         # Update cache
