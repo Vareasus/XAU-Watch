@@ -41,7 +41,7 @@ export default function MarketList() {
     }, []);
 
     return (
-        <div className="w-80 glass-panel m-4 mt-0 mb-4 px-4 py-6 border-white/10 flex flex-col h-full overflow-hidden shrink-0 shadow-neon">
+        <div className="w-full md:w-80 glass-panel m-4 mt-0 mb-4 px-4 py-6 border-white/10 flex flex-col h-full overflow-hidden shrink-0 shadow-neon">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <span className="text-sm font-bold text-white tracking-widest uppercase opacity-80">Precious Metals</span>
