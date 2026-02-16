@@ -21,8 +21,24 @@ const getPurity = (key: string) => {
     return purities[key] || '-';
 };
 
+const FALLBACK_PRICES: Record<string, any> = {
+    gram_altin: { name: "Gram Altın", selling: 3000.00, buying: 2950.00, change: 0.5 },
+    ceyrek_altin: { name: "Çeyrek Altın", selling: 4900.00, buying: 4800.00, change: 0.8 },
+    yarim_altin: { name: "Yarım Altın", selling: 9800.00, buying: 9600.00, change: 0.8 },
+    tam_altin: { name: "Tam Altın", selling: 19600.00, buying: 19100.00, change: 0.8 },
+    cumhuriyet_altin: { name: "Cumhuriyet Altını", selling: 20000.00, buying: 19500.00, change: 0.5 },
+    ata_altin: { name: "Ata Altın", selling: 20500.00, buying: 20000.00, change: 0.1 },
+    gremse_altin: { name: "Gremse Altın", selling: 49000.00, buying: 48000.00, change: 0.4 },
+    bilezik_22: { name: "22 Ayar Bilezik", selling: 2800.00, buying: 2700.00, change: 0.0 },
+    altin_14: { name: "14 Ayar Altın", selling: 2000.00, buying: 1900.00, change: -0.1 },
+};
+
 export default function GoldDetailModal({ gold: initialGold, onClose, allPrices = {} }: GoldDetailModalProps) {
     const [activeGold, setActiveGold] = useState(initialGold);
+
+    // Merge live prices with fallback to ensure we always have options
+    const displayPrices = (allPrices && Object.keys(allPrices).length > 0) ? allPrices : FALLBACK_PRICES;
+
     const [amount, setAmount] = useState<number>(1);
     const [period, setPeriod] = useState<'1D' | '1W'>('1D');
     const [chartData, setChartData] = useState<any[]>([]);
@@ -49,7 +65,7 @@ export default function GoldDetailModal({ gold: initialGold, onClose, allPrices 
 
     const handleSwitch = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const key = e.target.value;
-        const data = allPrices && allPrices[key];
+        const data = displayPrices && displayPrices[key];
         if (data) {
             const newGold = {
                 name: data.name,
@@ -135,19 +151,19 @@ export default function GoldDetailModal({ gold: initialGold, onClose, allPrices 
                     <div>
                         <div className="flex items-center gap-3 mb-1">
                             {/* Asset Switcher */}
-                            {allPrices && Object.keys(allPrices).length > 0 ? (
+                            {displayPrices && Object.keys(displayPrices).length > 0 ? (
                                 <select
                                     className="bg-transparent text-2xl font-bold text-white outline-none cursor-pointer hover:bg-white/5 rounded-lg -ml-2 px-2 py-1 appearance-none"
                                     onChange={handleSwitch}
-                                    value={Object.keys(allPrices).find(key => allPrices[key].name === activeGold.name) || ''}
+                                    value={Object.keys(displayPrices).find(key => displayPrices[key].name === activeGold.name) || ''}
                                 >
-                                    {Object.entries(allPrices).map(([key, val]: [string, any]) => (
+                                    {Object.entries(displayPrices).map(([key, val]: [string, any]) => (
                                         <option key={key} value={key} className="bg-[#0f172a] text-white">
                                             {val.name}
                                         </option>
                                     ))}
-                                    {/* Create a fallback option if the current activeGold isn't in allPrices */}
-                                    {!Object.values(allPrices).find((p: any) => p.name === activeGold.name) && (
+                                    {/* Create a fallback option if the current activeGold isn't in displayPrices */}
+                                    {!Object.values(displayPrices).find((p: any) => p.name === activeGold.name) && (
                                         <option value="" className="bg-[#0f172a] text-white">{activeGold.name}</option>
                                     )}
                                 </select>
