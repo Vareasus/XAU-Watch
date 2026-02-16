@@ -143,7 +143,7 @@ export default function GoldChart({ data, period, onPeriodChange, currentPrice }
                             }}
                             itemStyle={{ color: '#a78bfa', fontWeight: 'bold' }}
                             cursor={{ stroke: '#a78bfa', strokeWidth: 2, strokeDasharray: '5 5' }}
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
+                            formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, 'Price']}
                             separator=": "
                         />
                         <Area
