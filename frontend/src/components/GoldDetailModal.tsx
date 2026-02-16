@@ -39,11 +39,11 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
     const isPositive = gold.change >= 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center pt-8 p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-[#0f172a] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <div className="p-6 pt-8 border-b border-white/5 flex justify-between items-center bg-white/5">
                     <div>
                         <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                             {gold.name}
