@@ -78,7 +78,7 @@ async def get_turkish_prices():
                 continue
             
             # col[0] name, col[1] buy, col[2] sell
-            # Use separator to avoid "GAGram" concatenation issues
+            # Use separator to avoid concatenation, but handle if it fails
             full_text = cols[0].get_text(separator=' ', strip=True)
             
             # Helper to clean the name
@@ -86,43 +86,31 @@ async def get_turkish_prices():
                 # 1. Remove time patterns (e.g. 16:31:16)
                 text = re.sub(r'\d{2}:\d{2}:\d{2}', '', text)
                 
-                # 2. Known trash prefixes/codes cleaning based on screenshot analysis
-                # "GA Gram" -> "Gram", "XHGLD Has" -> "Has", "T Tam" -> "Tam", "GR Gremse" -> "Gremse"
-                # "ATA Ata" -> "Ata", "C Ceyrek" -> "Ceyrek" (or Ç)
+                # 2. Fix specific merged artifacts from screenshot
+                # "GAGram" -> "Gram"
+                if "GAGram" in text: text = text.replace("GAGram", "Gram")
+                if "CÇeyrek" in text: text = text.replace("CÇeyrek", "Çeyrek")
+                if "YYarım" in text: text = text.replace("YYarım", "Yarım")
+                if "TTam" in text: text = text.replace("TTam", "Tam")
+                if "GRGremse" in text: text = text.replace("GRGremse", "Gremse")
+                if "XHGLDHas" in text: text = text.replace("XHGLDHas", "Has")
+                if "ATAAta" in text: text = text.replace("ATAAta", "Ata")
+                if "2222 Ayar" in text: text = text.replace("2222 Ayar", "22 Ayar")
+                if "1414 Ayar" in text: text = text.replace("1414 Ayar", "14 Ayar")
                 
+                # 3. Remove standalone codes if they exist with spaces
                 parts = text.split()
                 cleaned_parts = []
-                
                 for part in parts:
-                    # Skip common codes if they appear alone
                     if part in ['GA', 'XHGLD', 'GR', 'ATA', 'C', 'T', 'Y', 'ZZ']: 
                         continue
-                    # Skip if part is suspiciously like the start of the next word (e.g. "C" before "Çeyrek" or "T" before "Tam")
-                    # but splitting by space usually handles "GA Gram" well. 
-                    
                     cleaned_parts.append(part)
                 
-                # Join back
                 name = " ".join(cleaned_parts)
                 
-                # Double check for concatenated artifacts if separator didn't work (fallback)
-                # "CCeyrek" -> "Çeyrek"
-                # This often handles "CodeName" if separator wasn't inserted by BS4 (e.g. text nodes)
-                # But we used separator=' ' so hopefully it's "Code Name".
+                # Final generic cleanup
+                name = name.replace("Altın Altın", "Altın") # Handle potential duplication
                 
-                # Fix specific known bad starts if they persist
-                if name.startswith("GA Gram"): name = name.replace("GA ", "")
-                if name.startswith("XHGLD"): name = name.replace("XHGLD", "").strip()
-                if name.startswith("ATA Ata"): name = name.replace("ATA ", "")
-                
-                # Remove any leftover short prefix if it matches the first letter of name? 
-                # e.g. "C Çeyrek"
-                if len(parts) > 1 and len(parts[0]) <= 2 and parts[1].startswith(parts[0]):
-                     # Example: "C Çeyrek" (C is not prefix of Ç exactly in unicode but visually close)
-                     # Or "T Tam"
-                     pass 
-
-                # Final cleanup
                 return name.strip()
 
             name_text = clean_name_text(full_text)
