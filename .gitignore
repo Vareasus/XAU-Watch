@@ -1,0 +1,40 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+backend/*.db
+backend/user_credentials.log
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment Variables (Critical)
+.env
+*.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+coverage/
+
+# Misc
+.DS_Store
+Thumbs.db

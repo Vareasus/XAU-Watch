@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "aurumwatch-backend"
+version = "0.1.0"
+description = "Gold Price Tracking, Trading Strategies, and Telegram Analysis Bot"
+authors = ["Anil Cylnn"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.0"
+uvicorn = "^0.27.0"
+sqlalchemy = "^2.0.25"
+aiosqlite = "^0.19.0"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.3"
+python-telegram-bot = "^21.0"
+python-dotenv = "^1.0.1"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pydantic = "^2.6.1"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
