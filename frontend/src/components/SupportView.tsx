@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
+import { API_URL } from '../config';
 
 interface Message {
     id: number;
@@ -20,19 +21,41 @@ export default function SupportView() {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [prices, setPrices] = useState<Record<string, any>>({});
 
     useEffect(() => {
+        // Fetch real prices for the bot context
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/prices/turkey`);
+                const data = await res.json();
+                if (data.data) {
+                    setPrices(data.data); // Store key -> { selling, buying, name, change }
+                }
+            } catch (e) {
+                console.error("Bot failed to fetch prices", e);
+            }
+        };
+        fetchPrices();
+    }, []);
+
+    const scrollToBottom = () => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
     }, [messages, isTyping]);
 
     const handleSend = async () => {
         if (!input.trim()) return;
 
+        const userText = input;
         const userMsg: Message = {
             id: Date.now(),
-            text: input,
+            text: userText,
             sender: 'user',
             timestamp: new Date()
         };
@@ -41,9 +64,9 @@ export default function SupportView() {
         setInput("");
         setIsTyping(true);
 
-        // Simulate LLM response delay
+        // Simulate "thinking"
         setTimeout(() => {
-            const botResponse = generateResponse(userMsg.text);
+            const botResponse = generateSmartResponse(userText);
             setMessages(prev => [...prev, {
                 id: Date.now() + 1,
                 text: botResponse,
@@ -51,24 +74,78 @@ export default function SupportView() {
                 timestamp: new Date()
             }]);
             setIsTyping(false);
-        }, 1500);
+        }, 1000 + Math.random() * 1000);
     };
 
-    const generateResponse = (query: string): string => {
-        const lowerQuery = query.toLowerCase();
-        if (lowerQuery.includes('gold') || lowerQuery.includes('price')) {
-            return "The current spot price of Gold (XAU/USD) is approximately $5043.11. Market volatility is moderate. Would you like a technical analysis?";
+    const generateSmartResponse = (query: string): string => {
+        const q = query.toLowerCase();
+
+        // 1. Greetings
+        if (q.match(/^(merhaba|selam|hi|hello|hey)/)) {
+            return "Merhaba! Size güncel altın fiyatları, piyasa analizleri ve portföy durumu hakkında yardımcı olabilirim. Ne öğrenmek istersiniz?";
         }
-        if (lowerQuery.includes('buy') || lowerQuery.includes('sell')) {
-            return "Based on current RSI levels (65), gold is approaching overbought territory. However, long-term trends remain bullish. Please consult a financial advisor for specific advice.";
+
+        // 2. Price Queries (Dynamic)
+        // Check for specific gold types
+        const typeMap: Record<string, string> = {
+            'gram': 'gram_altin',
+            'çeyrek': 'ceyrek_altin',
+            'ceyrek': 'ceyrek_altin',
+            'yarım': 'yarim_altin',
+            'yarim': 'yarim_altin',
+            'tam': 'tam_altin', // Adjust if key differs
+            'ata': 'ata_altin',
+            'gremse': 'gremse_altin',
+            'cumhuriyet': 'cumhuriyet_altini',
+            'bilezik': 'billezik_22', // Adjust key
+            '22 ayar': 'bilezik_22'
+        };
+
+        let foundKey = Object.keys(typeMap).find(k => q.includes(k));
+
+        if (foundKey) {
+            const apiKey = typeMap[foundKey];
+            const priceInfo = prices[apiKey];
+
+            if (priceInfo) {
+                const sellPrice = priceInfo.selling?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+                const buyPrice = priceInfo.buying?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+
+                if (q.includes('al') || q.includes('boz')) {
+                    return `${priceInfo.name} bozdururken (banka alış) yaklaşık ${buyPrice}, alırken ise ${sellPrice} seviyesindedir.`;
+                }
+                return `${priceInfo.name} şu an piyasada ${sellPrice} satış fiyatından işlem görüyor.`;
+            } else {
+                // Try fuzzy search in prices if exact map fails
+                const fuzzyKey = Object.keys(prices).find(k => k.includes(foundKey!) || prices[k].name?.toLowerCase().includes(foundKey!));
+                if (fuzzyKey) {
+                    const p = prices[fuzzyKey];
+                    return `${p.name} güncel fiyatı: ${p.selling?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`;
+                }
+            }
         }
-        if (lowerQuery.includes('gram') || lowerQuery.includes('try')) {
-            return "Gram Gold in TRY is currently trading around 3250 TRY. This is calculated based on the global spot price.";
+
+        // 3. General "Gold" query
+        if (q.includes('altın') || q.includes('gold') || q.includes('piyasa')) {
+            const gram = prices['gram_altin']?.selling;
+            if (gram) {
+                return `Altın piyasası hareketli. Gram altın şu an ${gram.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })} seviyesinde. Diğer çeşitleri sormak ister misiniz? (Örn: Çeyrek, Ata)`;
+            }
+            return "Piyasa verilerini şu an güncelliyorum, birazdan tekrar deneyin.";
         }
-        if (lowerQuery.includes('thank')) {
-            return "You're welcome! Let me know if you need anything else.";
+
+        // 4. Investment Advice (Safety)
+        if (q.includes('yatırım') || q.includes('almalı mı') || q.includes('düşer mi') || q.includes('çıkar mı')) {
+            return "Yapay zeka asistanı olarak doğrudan yatırım tavsiyesi veremem. Ancak teknik göstergeler piyasanın volatilitesini gösteriyor. Karar vermeden önce güncel grafikleri incelemenizi öneririm.";
         }
-        return "I can assist with real-time gold data, market sentiment, and technical indicators. What specifically are you interested in?";
+
+        // 5. Fallback / "Chat GPT style" phrasing
+        const fallbacks = [
+            "Bunu tam anlayamadım, ama altın fiyatları hakkında sorarsan yardımcı olabilirim.",
+            "Detaylı analiz için grafikleri kontrol edebilirsin. Belirli bir altın türü sormak ister misin?",
+            "Şu an veritabanımda bu bilgi yok. Ama Gram, Çeyrek veya Ata altın fiyatlarını sorabilirsin."
+        ];
+        return fallbacks[Math.floor(Math.random() * fallbacks.length)];
     };
 
     return (
