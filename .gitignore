@@ -22,6 +22,7 @@ frontend/build/
 # IDE
 .vscode/
 .idea/
+.vs/
 *.swp
 
 # Environment Variables (Critical)
