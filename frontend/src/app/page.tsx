@@ -134,7 +134,7 @@ export default function Home() {
       case 'dashboard':
         return (
           <main className="flex-1 flex flex-col md:flex-row min-h-0 animate-in fade-in slide-in-from-bottom-5 duration-500 pb-24 md:pb-0 overflow-y-auto md:overflow-hidden">
-            <div className="flex-1 flex flex-col min-w-0 relative mb-4 md:mb-0 md:mr-4 min-h-[350px]">
+            <div className="flex-1 flex flex-col min-w-0 relative mb-4 md:mb-0 md:mr-4 min-h-[500px]">
               <GoldChart
                 data={historicalData}
                 period={period}

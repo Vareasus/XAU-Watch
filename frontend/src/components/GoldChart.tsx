@@ -166,8 +166,8 @@ export default function GoldChart({ data, period, onPeriodChange, currentPrice }
                 </ResponsiveContainer>
             </div>
 
-            {/* Bottom status bar in chart */}
-            <div className="h-10 border-t border-white/5 bg-black/20 backdrop-blur-md flex items-center justify-between px-6 text-xs text-white/40 rounded-b-3xl mt-4 shrink-0">
+            {/* Bottom status bar in chart - Hidden on mobile */}
+            <div className="h-10 border-t border-white/5 bg-black/20 backdrop-blur-md hidden md:flex items-center justify-between px-6 text-xs text-white/40 rounded-b-3xl mt-4 shrink-0">
                 <div className="flex gap-6">
                     <span className="flex items-center gap-2"><Clock size={12} className="text-blue-400" /> Market Open</span>
                     <span className="flex items-center gap-2"><Layers size={12} className="text-purple-400" /> 24h Vol: <span className="text-white/70">12.5M</span></span>
