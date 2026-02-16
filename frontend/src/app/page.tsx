@@ -106,15 +106,46 @@ export default function Home() {
 
   // State for dashboard modal (Buy/Sell from Main Chart)
   const [dashboardModalGold, setDashboardModalGold] = useState<any>(null);
+  const [realPrices, setRealPrices] = useState<Record<string, any>>({});
+
+  // Fetch real prices for the modal context
+  useEffect(() => {
+    const fetchRealPrices = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/prices/turkey`);
+        const data = await res.json();
+        if (data.data) {
+          setRealPrices(data.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch real prices", e);
+      }
+    };
+    fetchRealPrices();
+    const interval = setInterval(fetchRealPrices, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChartTransaction = (type: 'buy' | 'sell') => {
-    // Construct a gold object for the modal based on current chart data
-    const goldObj = {
-      name: "Gram Altın (Spot)", // Defaulting to Gram for the main chart interaction
-      price: currentPrice,
-      buying: currentPrice * 0.98, // Estimated buying price
-      selling: currentPrice,
-      change: 0.84, // This could be dynamic if we had it
+    // Try to find Gram Gold in real prices, otherwise fallback
+    const gramGold = realPrices['gram_altin'];
+
+    const goldObj = gramGold ? {
+      key: 'gram_altin', // Important for identifying
+      name: gramGold.name,
+      price: gramGold.selling,
+      buying: gramGold.buying,
+      selling: gramGold.selling, // Redundant but consistent
+      change: gramGold.change,
+      weight: "1.00g",
+      purity: "0.995",
+    } : {
+      key: 'gram_altin',
+      name: "Gram Altın (Spot)",
+      price: 3000.00, // Reasonable fallback for Gram, not 5000 (XAU)
+      buying: 2950.00,
+      selling: 3000.00,
+      change: 0.5,
       weight: "1.00g",
       purity: "0.995",
     };
@@ -180,6 +211,7 @@ export default function Home() {
               <div style={{ position: 'fixed', inset: 0, zIndex: 100 }}>
                 <GoldDetailModal
                   gold={dashboardModalGold}
+                  allPrices={realPrices} // Pass all prices for switching
                   onClose={() => setDashboardModalGold(null)}
                 />
               </div>

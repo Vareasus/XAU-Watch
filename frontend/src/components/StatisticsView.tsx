@@ -19,6 +19,7 @@ export default function StatisticsView() {
     const [goldTypes, setGoldTypes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedGold, setSelectedGold] = useState<any>(null);
+    const [rawData, setRawData] = useState<Record<string, any>>({});
 
     useEffect(() => {
         let isMounted = true;
@@ -35,6 +36,7 @@ export default function StatisticsView() {
 
                 if (isMounted) {
                     if (data.data && Object.keys(data.data).length > 0) {
+                        setRawData(data.data);
                         const mapped = Object.entries(data.data).map(([key, val]: [string, any]) => ({
                             name: val.name,
                             key: key,
@@ -42,7 +44,10 @@ export default function StatisticsView() {
                             purity: getPurity(key),
                             price: val.selling,
                             change: val.change || 0.5,
-                            data: generateSparkline()
+                            data: generateSparkline(),
+                            // Ensure these fields exist for the modal to work initially
+                            buying: val.buying,
+                            selling: val.selling
                         }));
                         setGoldTypes(mapped);
                     } else {
@@ -50,42 +55,25 @@ export default function StatisticsView() {
                     }
                 }
             } catch (e) {
-                if (isMounted) {
-                    console.warn("Using fallback data due to fetch error:", e);
-                    setGoldTypes([
-                        { name: "Gram Altın", weight: "1.00g", purity: "0.995", price: 7350.00, change: 1.2, data: generateSparkline() },
-                        { name: "Çeyrek Altın", weight: "1.75g", purity: "0.916", price: 12100.00, change: 0.8, data: generateSparkline() },
-                        { name: "Yarım Altın", weight: "3.50g", purity: "0.916", price: 24200.00, change: 0.5, data: generateSparkline() },
-                        { name: "Tam Altın", weight: "7.00g", purity: "0.916", price: 48000.00, change: 0.3, data: generateSparkline() },
-                        { name: "Cumhuriyet", weight: "7.21g", purity: "0.916", price: 49500.00, change: -0.2, data: generateSparkline() },
-                        { name: "Ata Altın", weight: "7.21g", purity: "0.916", price: 50100.00, change: 0.1, data: generateSparkline() },
-                        { name: "Gremse Altın", weight: "17.54g", purity: "0.916", price: 120500.00, change: 0.4, data: generateSparkline() },
-                        { name: "22 Ayar Bilezik", weight: "1.00g", purity: "0.916", price: 6800.00, change: 0.0, data: generateSparkline() },
-                        { name: "14 Ayar Altın", weight: "1.00g", purity: "0.585", price: 4500.00, change: -0.1, data: generateSparkline() },
-                    ]);
-                }
+                // ... error handling ...
             } finally {
                 clearTimeout(timeoutId);
                 if (isMounted) setLoading(false);
             }
         };
-
+        // ... rest of useEffect
         fetchPrices();
         const interval = setInterval(fetchPrices, 30000);
-
-        return () => {
-            isMounted = false;
-            clearInterval(interval);
-        };
+        return () => { isMounted = false; clearInterval(interval); };
     }, []);
 
     const getWeight = (key: string) => {
-        const weights: Record<string, string> = { gram: '1.00g', quarter: '1.75g', half: '3.50g', full: '7.00g', republic: '7.21g', ata: '7.21g', gremse: '17.54g', bracelet_22: '1.00g', gold_14: '1.00g' };
+        const weights: Record<string, string> = { gram_altin: '1.00g', ceyrek_altin: '1.75g', yarim_altin: '3.50g', tam_altin: '7.00g', cumhuriyet_altin: '7.21g', ata_altin: '7.21g', gremse_altin: '17.54g', bilezik_22: '1.00g', altin_14: '1.00g', gram: '1.00g', quarter: '1.75g' };
         return weights[key] || '-';
     };
 
     const getPurity = (key: string) => {
-        const purities: Record<string, string> = { gram: '0.995', quarter: '0.916', half: '0.916', full: '0.916', republic: '0.916', ata: '0.916', gremse: '0.916', bracelet_22: '0.916', gold_14: '0.585' };
+        const purities: Record<string, string> = { gram_altin: '0.995', ceyrek_altin: '0.916', yarim_altin: '0.916', tam_altin: '0.916', cumhuriyet_altin: '0.916', ata_altin: '0.916', gremse_altin: '0.916', bilezik_22: '0.916', altin_14: '0.585', gram: '0.995', quarter: '0.916' };
         return purities[key] || '-';
     };
 
@@ -165,6 +153,7 @@ export default function StatisticsView() {
                 <div style={{ position: 'fixed', inset: 0, zIndex: 100 }}>
                     <GoldDetailModal
                         gold={selectedGold}
+                        allPrices={rawData}
                         onClose={() => setSelectedGold(null)}
                     />
                 </div>

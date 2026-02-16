@@ -7,13 +7,29 @@ import { clsx } from "clsx";
 
 interface GoldDetailModalProps {
     gold: any;
+    allPrices?: Record<string, any>;
     onClose: () => void;
 }
 
-export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps) {
+const getWeight = (key: string) => {
+    const weights: Record<string, string> = { gram_altin: '1.00g', ceyrek_altin: '1.75g', yarim_altin: '3.50g', tam_altin: '7.00g', cumhuriyet_altin: '7.21g', ata_altin: '7.21g', gremse_altin: '17.54g', bilezik_22: '1.00g', altin_14: '1.00g' };
+    return weights[key] || '-';
+};
+
+const getPurity = (key: string) => {
+    const purities: Record<string, string> = { gram_altin: '0.995', ceyrek_altin: '0.916', yarim_altin: '0.916', tam_altin: '0.916', cumhuriyet_altin: '0.916', ata_altin: '0.916', gremse_altin: '0.916', bilezik_22: '0.916', altin_14: '0.585' };
+    return purities[key] || '-';
+};
+
+export default function GoldDetailModal({ gold: initialGold, onClose, allPrices = {} }: GoldDetailModalProps) {
+    const [activeGold, setActiveGold] = useState(initialGold);
     const [amount, setAmount] = useState<number>(1);
     const [period, setPeriod] = useState<'1D' | '1W'>('1D');
     const [chartData, setChartData] = useState<any[]>([]);
+
+    useEffect(() => {
+        setActiveGold(initialGold);
+    }, [initialGold]);
 
     useEffect(() => {
         // Generate mock historical data based on period
@@ -21,7 +37,7 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
         const volatility = period === '1D' ? 0.005 : 0.02;
 
         const data = Array.from({ length: points }, (_, i) => {
-            const base = gold.price;
+            const base = activeGold.price;
             const random = 1 + (Math.random() * volatility * 2 - volatility);
             return {
                 name: period === '1D' ? `${i}:00` : `Day ${i + 1}`,
@@ -29,14 +45,32 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
             };
         });
         setChartData(data);
-    }, [period, gold]);
+    }, [period, activeGold]);
 
-    if (!gold) return null;
+    const handleSwitch = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const key = e.target.value;
+        const data = allPrices && allPrices[key];
+        if (data) {
+            const newGold = {
+                name: data.name,
+                price: data.selling,
+                buying: data.buying,
+                selling: data.selling,
+                change: data.change,
+                weight: getWeight(key),
+                purity: getPurity(key),
+                key: key
+            };
+            setActiveGold(newGold);
+        }
+    };
 
-    const totalBuy = amount * gold.price; // User buys at "Selling" price
-    const totalSell = amount * (gold.buying || gold.price * 0.95); // User sells at "Buying" price (approx if missing)
+    if (!activeGold) return null;
 
-    const isPositive = gold.change >= 0;
+    const totalBuy = amount * activeGold.price; // User buys at "Selling" price
+    const totalSell = amount * (activeGold.buying || activeGold.price * 0.95); // User sells at "Buying" price (approx if missing)
+
+    const isPositive = activeGold.change >= 0;
 
     const [notification, setNotification] = useState<string | null>(null);
 
@@ -47,10 +81,7 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
         const savedPortfolio = localStorage.getItem('userPortfolio');
         let portfolio = savedPortfolio ? JSON.parse(savedPortfolio) : [];
 
-        // Determine symbol key (this requires gold object to have a key, or we generate one)
-        // Since we don't have the explicit key passed in props, we can try to derive it or use name
-        // Ideally the parent should pass the key, but name is unique enough for now.
-        const symbol = gold.name;
+        const symbol = activeGold.name;
 
         if (type === 'sell') {
             // Check formatted ownership
@@ -68,9 +99,9 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
         const transaction = {
             id: Date.now(),
             symbol: symbol,
-            name: gold.name,
+            name: activeGold.name,
             amount: amount,
-            price: type === 'buy' ? gold.price : (gold.buying || gold.price * 0.95),
+            price: type === 'buy' ? activeGold.price : (activeGold.buying || activeGold.price * 0.95),
             date: new Date().toISOString(),
             type: type
         };
@@ -78,7 +109,7 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
         const newPortfolio = [...portfolio, transaction];
         localStorage.setItem('userPortfolio', JSON.stringify(newPortfolio));
 
-        setNotification(`Successfully ${type === 'buy' ? 'bought' : 'sold'} ${amount} ${gold.name}!`);
+        setNotification(`Successfully ${type === 'buy' ? 'bought' : 'sold'} ${amount} ${activeGold.name}!`);
         setTimeout(() => {
             setNotification(null);
             onClose(); // Close modal on success
@@ -102,17 +133,39 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
                 {/* Header */}
                 <div className="p-6 pt-8 border-b border-white/5 flex justify-between items-center bg-white/5">
                     <div>
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                            {gold.name}
+                        <div className="flex items-center gap-3 mb-1">
+                            {/* Asset Switcher */}
+                            {allPrices && Object.keys(allPrices).length > 0 ? (
+                                <select
+                                    className="bg-transparent text-2xl font-bold text-white outline-none cursor-pointer hover:bg-white/5 rounded-lg -ml-2 px-2 py-1 appearance-none"
+                                    onChange={handleSwitch}
+                                    value={Object.keys(allPrices).find(key => allPrices[key].name === activeGold.name) || ''}
+                                >
+                                    {Object.entries(allPrices).map(([key, val]: [string, any]) => (
+                                        <option key={key} value={key} className="bg-[#0f172a] text-white">
+                                            {val.name}
+                                        </option>
+                                    ))}
+                                    {/* Create a fallback option if the current activeGold isn't in allPrices */}
+                                    {!Object.values(allPrices).find((p: any) => p.name === activeGold.name) && (
+                                        <option value="" className="bg-[#0f172a] text-white">{activeGold.name}</option>
+                                    )}
+                                </select>
+                            ) : (
+                                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                    {activeGold.name}
+                                </h2>
+                            )}
+
                             <span className={clsx(
-                                "text-sm px-2 py-1 rounded-lg flex items-center gap-1",
+                                "text-sm px-2 py-1 rounded-lg flex items-center gap-1 h-fit",
                                 isPositive ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
                             )}>
                                 {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                                {Math.abs(gold.change)}%
+                                {Math.abs(activeGold.change)}%
                             </span>
-                        </h2>
-                        <p className="text-white/50 text-sm mt-1">{gold.weight} • {gold.purity} Purity</p>
+                        </div>
+                        <p className="text-white/50 text-sm mt-1">{activeGold.weight || getWeight(activeGold.key)} • {activeGold.purity || getPurity(activeGold.key)} Purity</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <X className="text-white/70" />
@@ -126,13 +179,13 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
                         <div className="glass-panel p-4 rounded-2xl bg-emerald-500/5 border-emerald-500/20 border">
                             <span className="text-emerald-400/70 text-sm font-bold uppercase tracking-wider">Bank Selling (You Buy)</span>
                             <div className="text-2xl font-black text-emerald-400 mt-1">
-                                ₺{gold.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                                ₺{activeGold.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                             </div>
                         </div>
                         <div className="glass-panel p-4 rounded-2xl bg-rose-500/5 border-rose-500/20 border">
                             <span className="text-rose-400/70 text-sm font-bold uppercase tracking-wider">Bank Buying (You Sell)</span>
                             <div className="text-2xl font-black text-rose-400 mt-1">
-                                ₺{(gold.buying || gold.price * 0.98).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                                ₺{(activeGold.buying || activeGold.price * 0.98).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                             </div>
                         </div>
                     </div>
@@ -210,7 +263,7 @@ export default function GoldDetailModal({ gold, onClose }: GoldDetailModalProps)
                             <div className="flex-1 text-right">
                                 <label className="text-white/50 text-xs uppercase font-bold block mb-1">Estimated Total</label>
                                 <div className="text-xl font-bold text-white tabular-nums">
-                                    ₺{(amount * gold.price).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                                    ₺{(amount * activeGold.price).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                                 </div>
                             </div>
                         </div>
