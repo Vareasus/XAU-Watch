@@ -19,7 +19,7 @@ import { Home as HomeIcon, LayoutDashboard, BarChart2, Search, Award, MessageCir
 // Mock data generator - FIX: Handle different periods
 const generateMockData = (period: string) => {
   const data: any[] = [];
-  let price = 5043.11;
+  let price = 2035.50;
   const now = new Date();
 
   let points = 24;

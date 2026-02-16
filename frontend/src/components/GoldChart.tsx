@@ -89,7 +89,7 @@ export default function GoldChart({ data, period, onPeriodChange, currentPrice }
             </div>
 
             {/* The Chart - Adjusted padding to respect header */}
-            <div className="flex-1 w-full min-h-0 px-4 relative z-10">
+            <div className="flex-1 w-full min-h-[250px] px-4 relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                         data={data}
