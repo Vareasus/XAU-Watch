@@ -1,6 +1,6 @@
 "use client";
 
-import { X, TrendingUp, TrendingDown, Calculator, Calendar } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Calculator, Calendar, ChevronDown } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 import { clsx } from "clsx";
@@ -150,29 +150,31 @@ export default function GoldDetailModal({ gold: initialGold, onClose, allPrices 
                 <div className="p-6 pt-8 border-b border-white/5 flex justify-between items-center bg-white/5">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
-                            {/* Asset Switcher */}
+                            {/* Asset Switcher - Now with visible dropdown styling */}
                             {displayPrices && Object.keys(displayPrices).length > 0 ? (
-                                <select
-                                    className="bg-transparent text-2xl font-bold text-white outline-none cursor-pointer hover:bg-white/5 rounded-lg -ml-2 px-2 py-1 appearance-none"
-                                    onChange={handleSwitch}
-                                    value={Object.keys(displayPrices).find(key => displayPrices[key].name === activeGold.name) || ''}
-                                >
-                                    {Object.entries(displayPrices).map(([key, val]: [string, any]) => (
-                                        <option key={key} value={key} className="bg-[#0f172a] text-white">
-                                            {val.name}
-                                        </option>
-                                    ))}
-                                    {/* Create a fallback option if the current activeGold isn't in displayPrices */}
-                                    {!Object.values(displayPrices).find((p: any) => p.name === activeGold.name) && (
-                                        <option value="" className="bg-[#0f172a] text-white">{activeGold.name}</option>
-                                    )}
-                                </select>
+                                <div className="relative flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl px-3 py-2 transition-all group cursor-pointer">
+                                    <select
+                                        className="bg-transparent text-xl font-bold text-white outline-none cursor-pointer appearance-none pr-6"
+                                        onChange={handleSwitch}
+                                        value={Object.keys(displayPrices).find(key => displayPrices[key].name === activeGold.name) || ''}
+                                    >
+                                        {Object.entries(displayPrices).map(([key, val]: [string, any]) => (
+                                            <option key={key} value={key} className="bg-[#0f172a] text-white">
+                                                {val.name}
+                                            </option>
+                                        ))}
+                                        {/* Create a fallback option if the current activeGold isn't in displayPrices */}
+                                        {!Object.values(displayPrices).find((p: any) => p.name === activeGold.name) && (
+                                            <option value="" className="bg-[#0f172a] text-white">{activeGold.name}</option>
+                                        )}
+                                    </select>
+                                    <ChevronDown size={18} className="text-white/70 group-hover:text-white absolute right-3 pointer-events-none" />
+                                </div>
                             ) : (
                                 <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                                     {activeGold.name}
                                 </h2>
                             )}
-
                             <span className={clsx(
                                 "text-sm px-2 py-1 rounded-lg flex items-center gap-1 h-fit",
                                 isPositive ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
